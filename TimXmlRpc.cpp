@@ -1415,8 +1415,6 @@ void XmlRpcImplementation::hadError(const char* function)
 		errmsg += "Talking HTTPS to an HTTP server?";
 	else if (LastError == ERROR_INTERNET_CANNOT_CONNECT)
 		errmsg += "Failed to connect";
-	else if (LastError == ERROR_INTERNET_NAME_NOT_RESOLVED)
-		errmsg += "Name not resolved";
 	else if (LastError == ERROR_INTERNET_INVALID_URL)
 		errmsg += "Invalid URL";
 	else if (LastError == ERROR_INTERNET_NAME_NOT_RESOLVED)
