@@ -1118,6 +1118,7 @@ void XmlRpcValue::structFromXml(const char* &s)
 		XmlRpcValue val;
 		val.fromXml(s);
 		if ( ! val.valid()) {
+			free(name);
 			invalidate();
 			return;
 		}
