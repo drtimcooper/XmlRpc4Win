@@ -1001,7 +1001,7 @@ void XmlRpcValue::timeFromXml(const char* &s)
 	if (sscanf_s(s, "%4d%2d%2dT%2d:%2d:%2d", &t.tm_year,&t.tm_mon,&t.tm_mday,&t.tm_hour,&t.tm_min,&t.tm_sec) != 6)
 		throw XmlRpcException("Bad time value");
 
-	t.tm_isdst = -1;
+	t.tm_wday = t.tm_yday = t.tm_isdst = -1;
 	t.tm_mon -= 1;
 	_type = TypeDateTime;
 	u.asTime = new struct tm(t);
