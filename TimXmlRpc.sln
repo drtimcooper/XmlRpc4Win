@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TimXmlRpc", "TimXmlRpc.vcproj", "{15F133BD-94DC-4E42-92AB-99DBFA3756DD}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PlainAndFast", "PlainAndFast.vcproj", "{15F136BD-94DC-4E42-93AB-99DBFA3756DE}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -15,10 +13,6 @@ Global
 		{15F133BD-94DC-4E42-92AB-99DBFA3756DD}.Debug|Win32.Build.0 = Debug|Win32
 		{15F133BD-94DC-4E42-92AB-99DBFA3756DD}.Release|Win32.ActiveCfg = Release|Win32
 		{15F133BD-94DC-4E42-92AB-99DBFA3756DD}.Release|Win32.Build.0 = Release|Win32
-		{15F136BD-94DC-4E42-93AB-99DBFA3756DE}.Debug|Win32.ActiveCfg = Debug|Win32
-		{15F136BD-94DC-4E42-93AB-99DBFA3756DE}.Debug|Win32.Build.0 = Debug|Win32
-		{15F136BD-94DC-4E42-93AB-99DBFA3756DE}.Release|Win32.ActiveCfg = Release|Win32
-		{15F136BD-94DC-4E42-93AB-99DBFA3756DE}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
