@@ -178,30 +178,15 @@ public:
 	bool operator==(XmlRpcValue const& other) const;
 	bool operator!=(XmlRpcValue const& other) const { return !(*this == other); }
 
-	// This is an alternative to operator std::string() that Aigner claims is needed for VS13
 	std::string GetStdString()	{
 								if (_type == TypeInt) {
-									char tmp[80];
-									_itoa_s(u.asInt, tmp, 10); // itoa(u.asInt, tmp, 10);
-									return (std::string)tmp;
+									char tmp[16];
+									_itoa_s(u.asInt, tmp, 10);
+									return tmp;
 								}
 								assertTypeOrInvalid(TypeString);
-								return std::string(u.asString);
+								return u.asString;
 							}
-
-#if defined(_MSC_VER) && (_MSC_VER > 1700)
-	operator const std::string& () { 
-								if (_type == TypeInt) {
-									char tmp[80];
-									_itoa_s(u.asInt, tmp, 10); // itoa(u.asInt, tmp, 10);
-									return std::move(std::string(tmp));
-								}
-								assertTypeOrInvalid(TypeString);
-								return std::move(std::string(u.asString));
-							}
-#else
-	operator std::string () { return GetStdString(); } 
-#endif
 
 	// There are some basic type conversions here. This might mean that your
 	// program parses stuff that strictly speaking it should report as a type error.
@@ -226,9 +211,6 @@ public:
 									return u.asInt;
 								assertTypeOrInvalid(TypeDouble);
 								return 0;
-							}
-	operator std::string&()	{ 
-								return GetStdString();
 							}
 
 	operator const char*()	{ assertTypeOrInvalid(TypeString); return u.asString; }
