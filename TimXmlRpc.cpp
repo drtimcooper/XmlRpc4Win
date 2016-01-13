@@ -1304,8 +1304,8 @@ void XmlRpcClient::setBasicAuth_Callback(getBasicAuth_UsernameAndPassword_fn fn)
 
 void XmlRpcClient::setBasicAuth_UsernameAndPassword(const char* username, const char* password)
 {
-	strcpy(secret->BasicAuth.username, username);
-	strcpy(secret->BasicAuth.password, password);
+	strcpy_s(secret->BasicAuth.username, username);
+	strcpy_s(secret->BasicAuth.password, password);
 }
 
 
@@ -1444,7 +1444,7 @@ void XmlRpcImplementation::hadError(const char* function)
 		);
 		if (buf == NULL) {
 			char tmp[512];
-			sprintf(tmp, "Error %d", LastError);
+			sprintf_s(tmp, "Error %d", LastError);
 			errmsg += tmp;
 		}
 		else {
@@ -1475,7 +1475,7 @@ static void CALLBACK myInternetCallback(HINTERNET hInternet,
 			case INTERNET_STATUS_REQUEST_SENT:			status = "Data sent"; break;
 			case INTERNET_STATUS_SENDING_REQUEST:		status = "Sending data"; break;
 			default:									status = buf; 
-														sprintf(buf, "Status %d", dwInternetStatus);
+														sprintf_s(buf, "Status %d", dwInternetStatus);
 														break;
 		}
 		connection->Callback(connection->context, status);
@@ -1538,7 +1538,7 @@ RETRY:
 
 	// Add the 'Content-Type' && 'Content-length' headers
 	char header[255];		// Thanks, Anthony Chan.
-	sprintf(header, "Content-Type: text/xml\r\nContent-length: %d", ostr.str().size());
+	sprintf_s(header, "Content-Type: text/xml\r\nContent-length: %d", ostr.str().size());
     HttpAddRequestHeaders(hHttpFile, header, strlen(header), HTTP_ADDREQ_FLAG_ADD);
 
 	// Send the request:
@@ -1621,7 +1621,7 @@ RETRY:
  			errmsg = "Could not query HTTP result status";
 		else {
 			char buf[512];
-			sprintf(buf, "Low level (HTTP) error: %d %s", HttpErrcode, status_text);
+			sprintf_s(buf, "Low level (HTTP) error: %d %s", HttpErrcode, status_text);
 			errmsg = buf;
 		}
 	    InternetCloseHandle(hHttpFile);
