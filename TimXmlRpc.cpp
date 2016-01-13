@@ -740,7 +740,7 @@ bool XmlRpcValue::operator==(XmlRpcValue const& other) const
 int XmlRpcValue::size() const
 {
 	switch (_type) {
-		case TypeString: return strlen(u.asString);
+		case TypeString: return int(strlen(u.asString));
 		case TypeBase64: return int(u.asBinary->size());
 		case TypeArray:	return int(u.asArray->size());
 		case TypeStruct: return int(u.asStruct->size());
