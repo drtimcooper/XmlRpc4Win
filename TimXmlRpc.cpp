@@ -647,7 +647,7 @@ static char* xmlDecode(const char* s, const char* end)
 			*d++ = '>', s += 4;
 		else if (strbegins(s, "&#", true)) {
 			s += 2;
-			*d++ = atoi(s);
+			*d++ = (char)atoi(s);
 			while (*s >= '0' && *s <= '9')
 				s++;
 			if (*s == ';')
