@@ -1539,10 +1539,10 @@ RETRY:
 	// Add the 'Content-Type' && 'Content-length' headers
 	char header[255];		// Thanks, Anthony Chan.
 	sprintf_s(header, "Content-Type: text/xml\r\nContent-length: %d", ostr.str().size());
-    HttpAddRequestHeaders(hHttpFile, header, strlen(header), HTTP_ADDREQ_FLAG_ADD);
+    HttpAddRequestHeaders(hHttpFile, header, (DWORD)strlen(header), HTTP_ADDREQ_FLAG_ADD);
 
 	// Send the request:
-	if (! HttpSendRequest(hHttpFile, NULL, 0, (LPVOID)ostr.str().c_str(), ostr.str().size())) {
+	if (! HttpSendRequest(hHttpFile, NULL, 0, (LPVOID)ostr.str().c_str(), (DWORD)ostr.str().size())) {
 		hadError("HttpSendRequest");
 		return false;
 	}
