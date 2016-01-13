@@ -1538,7 +1538,7 @@ RETRY:
 
 	// Add the 'Content-Type' && 'Content-length' headers
 	char header[255];		// Thanks, Anthony Chan.
-	sprintf_s(header, "Content-Type: text/xml\r\nContent-length: %d", ostr.str().size());
+	sprintf_s(header, "Content-Type: text/xml\r\nContent-length: %Iu", ostr.str().size());
     HttpAddRequestHeaders(hHttpFile, header, (DWORD)strlen(header), HTTP_ADDREQ_FLAG_ADD);
 
 	// Send the request:
