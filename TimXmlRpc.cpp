@@ -1218,7 +1218,7 @@ class XmlRpcImplementation {
 	HINTERNET hInternet;
 	HINTERNET hConnect;
 	std::string object;
-	int port;
+	INTERNET_PORT port;
 
 	void hadError(const char* function);
 	bool connect(const char* server);
@@ -1242,7 +1242,7 @@ public:
 	int HttpErrcode;
 	bool isFault;
 
-	XmlRpcImplementation(const char* server, int port, const char* object, XmlRpcClient::protocol_enum protocol);
+	XmlRpcImplementation(const char* server, INTERNET_PORT port, const char* object, XmlRpcClient::protocol_enum protocol);
 	XmlRpcImplementation(const char* URI);
 	bool execute(const char* method, XmlRpcValue const& params, XmlRpcValue& result);
 	void setCallback(XmlRpcCallback Callback, void* context)
@@ -1254,7 +1254,7 @@ public:
 
 XmlRpcClient::XmlRpcClient(const char* server, int port, const char* object, protocol_enum protocol)
 {
-	secret = new XmlRpcImplementation(server, port, object, protocol);
+	secret = new XmlRpcImplementation(server, (INTERNET_PORT)port, object, protocol);
 }
 
 
@@ -1328,7 +1328,7 @@ void XmlRpcClient::close()
 }
 
 
-XmlRpcImplementation::XmlRpcImplementation(const char* server, int _port, const char* _object, 
+XmlRpcImplementation::XmlRpcImplementation(const char* server, INTERNET_PORT _port, const char* _object,
 												XmlRpcClient::protocol_enum _protocol)
 {
 	port = _port;
@@ -1368,7 +1368,7 @@ XmlRpcImplementation::XmlRpcImplementation(const char* URI)
 	std::string server(URI, t - URI);
 	if (*t == ':') {
 		t++;
-		port = atoi(t);
+		port = (INTERNET_PORT)atoi(t);
 		while (*t >= '0' && *t <= '9')
 			t++;
 	}
