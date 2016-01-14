@@ -19,7 +19,6 @@ work with the token:  "/*ChrisMorley/".  Thanks, Chris!
 
 */
 
-#undef UNICODE
 #include <windows.h>
 #include <wininet.h>
 #include <fstream>
@@ -1383,20 +1382,20 @@ bool XmlRpcImplementation::connect(const char* server)
 	Callback = NULL;
 	context = NULL;
 	totalBytes = 0;
-	hInternet = InternetOpen("XmlRpc", 0, NULL, NULL, 0);
+	hInternet = InternetOpenA("XmlRpc", 0, NULL, NULL, 0);
 	if (hInternet == NULL) {
 		hadError("InternetOpen");
 		return false;
 	}
-	hConnect = InternetConnect(hInternet, server, port, 
+	hConnect = InternetConnectA(hInternet, server, port, 
 					NULL, NULL, INTERNET_SERVICE_HTTP, 0, (DWORD_PTR)this);
 	if (hConnect == NULL) {
 		hadError("InternetConnect");
 		return false;
 	}
 	DWORD dwTimeout=999000;		// 999 seconds
-	InternetSetOption(hInternet, INTERNET_OPTION_RECEIVE_TIMEOUT, &dwTimeout, sizeof(DWORD)); 
-	InternetSetOption(hConnect, INTERNET_OPTION_RECEIVE_TIMEOUT, &dwTimeout, sizeof(DWORD));
+	InternetSetOptionA(hInternet, INTERNET_OPTION_RECEIVE_TIMEOUT, &dwTimeout, sizeof(DWORD)); 
+	InternetSetOptionA(hConnect, INTERNET_OPTION_RECEIVE_TIMEOUT, &dwTimeout, sizeof(DWORD));
 	return true;
 }
 
@@ -1430,7 +1429,7 @@ void XmlRpcImplementation::hadError(const char* function)
 		errmsg += "Unable to check whether security certificate was revoked or not. Is your system clock time correct?";
 	else {
 		static char* buf;
-    	FormatMessage(
+		FormatMessageA(
 				FORMAT_MESSAGE_ALLOCATE_BUFFER |
 				FORMAT_MESSAGE_FROM_SYSTEM |
 				FORMAT_MESSAGE_IGNORE_INSERTS,
@@ -1509,11 +1508,11 @@ bool XmlRpcImplementation::execute(const char* method, XmlRpcValue const& params
 	if (protocol != XmlRpcClient::XMLRPC_HTTP)
 		flags |= INTERNET_FLAG_SECURE | INTERNET_FLAG_IGNORE_CERT_CN_INVALID | INTERNET_FLAG_IGNORE_CERT_DATE_INVALID;
 RETRY:
-	HINTERNET hHttpFile = HttpOpenRequest(
+	HINTERNET hHttpFile = HttpOpenRequestA(
 					  hConnect,
 					  "POST",
 					  object.c_str(),
-					  HTTP_VERSION,
+					  HTTP_VERSIONA,
 					  NULL,
 					  acceptTypes,
 					  flags, 
@@ -1538,10 +1537,10 @@ RETRY:
 	// Add the 'Content-Type' && 'Content-length' headers
 	char header[255];		// Thanks, Anthony Chan.
 	sprintf_s(header, "Content-Type: text/xml\r\nContent-length: %Iu", ostr.str().size());
-    HttpAddRequestHeaders(hHttpFile, header, (DWORD)strlen(header), HTTP_ADDREQ_FLAG_ADD);
+	HttpAddRequestHeadersA(hHttpFile, header, (DWORD)strlen(header), HTTP_ADDREQ_FLAG_ADD);
 
 	// Send the request:
-	if (! HttpSendRequest(hHttpFile, NULL, 0, (LPVOID)ostr.str().c_str(), (DWORD)ostr.str().size())) {
+	if (! HttpSendRequestA(hHttpFile, NULL, 0, (LPVOID)ostr.str().c_str(), (DWORD)ostr.str().size())) {
 		hadError("HttpSendRequest");
 		return false;
 	}
@@ -1599,10 +1598,10 @@ RETRY:
 			free(buf);
 			buf = NULL;
 			if (BasicAuth.FindUsernameAndPassword(BasicAuth.username[0] != '\0', BasicAuth.username, BasicAuth.password)) {
-				InternetSetOption(hConnect, INTERNET_OPTION_PROXY_USERNAME, 
-										(LPVOID)BasicAuth.username, lstrlen(BasicAuth.username));
-				InternetSetOption(hConnect, INTERNET_OPTION_PROXY_PASSWORD, 
-										(LPVOID)BasicAuth.password, lstrlen(BasicAuth.password));
+				InternetSetOptionA(hConnect, INTERNET_OPTION_PROXY_USERNAME, 
+										(LPVOID)BasicAuth.username, lstrlenA(BasicAuth.username));
+				InternetSetOptionA(hConnect, INTERNET_OPTION_PROXY_PASSWORD, 
+										(LPVOID)BasicAuth.password, lstrlenA(BasicAuth.password));
 				goto RETRY;
 			}
 		}
