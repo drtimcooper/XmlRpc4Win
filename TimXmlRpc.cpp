@@ -1623,6 +1623,7 @@ RETRY:
 			sprintf(buf, "Low level (HTTP) error: %d %s", HttpErrcode, status_text);
 			errmsg = buf;
 		}
+		free(status_text);
 	    InternetCloseHandle(hHttpFile);
  		free(buf);
  		return false;
