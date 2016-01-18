@@ -647,7 +647,7 @@ static char* xmlDecode(const char* s, const char* end)
 			*d++ = '>', s += 4;
 		else if (strbegins(s, "&#", true)) {
 			s += 2;
-			*d++ = atoi(s);
+			*d++ = (char)atoi(s);
 			while (*s >= '0' && *s <= '9')
 				s++;
 			if (*s == ';')
@@ -692,7 +692,7 @@ static std::string xmlEncode(const char* s)
 static bool tmEq(struct tm const& t1, struct tm const& t2) 
 {
 	return t1.tm_sec == t2.tm_sec && t1.tm_min == t2.tm_min &&
-					t1.tm_hour == t2.tm_hour && t1.tm_mday == t1.tm_mday &&
+					t1.tm_hour == t2.tm_hour && t1.tm_mday == t2.tm_mday &&
 					t1.tm_mon == t2.tm_mon && t1.tm_year == t2.tm_year;
 }
 
@@ -740,7 +740,7 @@ bool XmlRpcValue::operator==(XmlRpcValue const& other) const
 int XmlRpcValue::size() const
 {
 	switch (_type) {
-		case TypeString: return strlen(u.asString);
+		case TypeString: return int(strlen(u.asString));
 		case TypeBase64: return int(u.asBinary->size());
 		case TypeArray:	return int(u.asArray->size());
 		case TypeStruct: return int(u.asStruct->size());
@@ -1001,7 +1001,7 @@ void XmlRpcValue::timeFromXml(const char* &s)
 	if (sscanf_s(s, "%4d%2d%2dT%2d:%2d:%2d", &t.tm_year,&t.tm_mon,&t.tm_mday,&t.tm_hour,&t.tm_min,&t.tm_sec) != 6)
 		throw XmlRpcException("Bad time value");
 
-	t.tm_isdst = -1;
+	t.tm_wday = t.tm_yday = t.tm_isdst = -1;
 	t.tm_mon -= 1;
 	_type = TypeDateTime;
 	u.asTime = new struct tm(t);
@@ -1219,7 +1219,7 @@ class XmlRpcImplementation {
 	HINTERNET hInternet;
 	HINTERNET hConnect;
 	std::string object;
-	int port;
+	INTERNET_PORT port;
 
 	void hadError(const char* function);
 	bool connect(const char* server);
@@ -1243,7 +1243,7 @@ public:
 	int HttpErrcode;
 	bool isFault;
 
-	XmlRpcImplementation(const char* server, int port, const char* object, XmlRpcClient::protocol_enum protocol);
+	XmlRpcImplementation(const char* server, INTERNET_PORT port, const char* object, XmlRpcClient::protocol_enum protocol);
 	XmlRpcImplementation(const char* URI);
 	bool execute(const char* method, XmlRpcValue const& params, XmlRpcValue& result);
 	void setCallback(XmlRpcCallback Callback, void* context)
@@ -1255,7 +1255,7 @@ public:
 
 XmlRpcClient::XmlRpcClient(const char* server, int port, const char* object, protocol_enum protocol)
 {
-	secret = new XmlRpcImplementation(server, port, object, protocol);
+	secret = new XmlRpcImplementation(server, (INTERNET_PORT)port, object, protocol);
 }
 
 
@@ -1305,8 +1305,8 @@ void XmlRpcClient::setBasicAuth_Callback(getBasicAuth_UsernameAndPassword_fn fn)
 
 void XmlRpcClient::setBasicAuth_UsernameAndPassword(const char* username, const char* password)
 {
-	strcpy(secret->BasicAuth.username, username);
-	strcpy(secret->BasicAuth.password, password);
+	strcpy_s(secret->BasicAuth.username, username);
+	strcpy_s(secret->BasicAuth.password, password);
 }
 
 
@@ -1329,7 +1329,7 @@ void XmlRpcClient::close()
 }
 
 
-XmlRpcImplementation::XmlRpcImplementation(const char* server, int _port, const char* _object, 
+XmlRpcImplementation::XmlRpcImplementation(const char* server, INTERNET_PORT _port, const char* _object,
 												XmlRpcClient::protocol_enum _protocol)
 {
 	port = _port;
@@ -1369,7 +1369,7 @@ XmlRpcImplementation::XmlRpcImplementation(const char* URI)
 	std::string server(URI, t - URI);
 	if (*t == ':') {
 		t++;
-		port = atoi(t);
+		port = (INTERNET_PORT)atoi(t);
 		while (*t >= '0' && *t <= '9')
 			t++;
 	}
@@ -1416,8 +1416,6 @@ void XmlRpcImplementation::hadError(const char* function)
 		errmsg += "Talking HTTPS to an HTTP server?";
 	else if (LastError == ERROR_INTERNET_CANNOT_CONNECT)
 		errmsg += "Failed to connect";
-	else if (LastError == ERROR_INTERNET_NAME_NOT_RESOLVED)
-		errmsg += "Name not resolved";
 	else if (LastError == ERROR_INTERNET_INVALID_URL)
 		errmsg += "Invalid URL";
 	else if (LastError == ERROR_INTERNET_NAME_NOT_RESOLVED)
@@ -1445,7 +1443,7 @@ void XmlRpcImplementation::hadError(const char* function)
 		);
 		if (buf == NULL) {
 			char tmp[512];
-			sprintf(tmp, "Error %d", LastError);
+			sprintf_s(tmp, "Error %d", LastError);
 			errmsg += tmp;
 		}
 		else {
@@ -1476,7 +1474,7 @@ static void CALLBACK myInternetCallback(HINTERNET hInternet,
 			case INTERNET_STATUS_REQUEST_SENT:			status = "Data sent"; break;
 			case INTERNET_STATUS_SENDING_REQUEST:		status = "Sending data"; break;
 			default:									status = buf; 
-														sprintf(buf, "Status %d", dwInternetStatus);
+														sprintf_s(buf, "Status %d", dwInternetStatus);
 														break;
 		}
 		connection->Callback(connection->context, status);
@@ -1539,11 +1537,11 @@ RETRY:
 
 	// Add the 'Content-Type' && 'Content-length' headers
 	char header[255];		// Thanks, Anthony Chan.
-	sprintf(header, "Content-Type: text/xml\r\nContent-length: %d", ostr.str().size());
-    HttpAddRequestHeaders(hHttpFile, header, strlen(header), HTTP_ADDREQ_FLAG_ADD);
+	sprintf_s(header, "Content-Type: text/xml\r\nContent-length: %Iu", ostr.str().size());
+    HttpAddRequestHeaders(hHttpFile, header, (DWORD)strlen(header), HTTP_ADDREQ_FLAG_ADD);
 
 	// Send the request:
-	if (! HttpSendRequest(hHttpFile, NULL, 0, (LPVOID)ostr.str().c_str(), ostr.str().size())) {
+	if (! HttpSendRequest(hHttpFile, NULL, 0, (LPVOID)ostr.str().c_str(), (DWORD)ostr.str().size())) {
 		hadError("HttpSendRequest");
 		return false;
 	}
@@ -1622,9 +1620,10 @@ RETRY:
  			errmsg = "Could not query HTTP result status";
 		else {
 			char buf[512];
-			sprintf(buf, "Low level (HTTP) error: %d %s", HttpErrcode, status_text);
+			sprintf_s(buf, "Low level (HTTP) error: %d %s", HttpErrcode, status_text);
 			errmsg = buf;
 		}
+		free(status_text);
 	    InternetCloseHandle(hHttpFile);
  		free(buf);
  		return false;
