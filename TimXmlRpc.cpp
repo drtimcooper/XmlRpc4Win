@@ -692,7 +692,7 @@ static std::string xmlEncode(const char* s)
 static bool tmEq(struct tm const& t1, struct tm const& t2) 
 {
 	return t1.tm_sec == t2.tm_sec && t1.tm_min == t2.tm_min &&
-					t1.tm_hour == t2.tm_hour && t1.tm_mday == t1.tm_mday &&
+					t1.tm_hour == t2.tm_hour && t1.tm_mday == t2.tm_mday &&
 					t1.tm_mon == t2.tm_mon && t1.tm_year == t2.tm_year;
 }
 
@@ -1001,7 +1001,7 @@ void XmlRpcValue::timeFromXml(const char* &s)
 	if (sscanf_s(s, "%4d%2d%2dT%2d:%2d:%2d", &t.tm_year,&t.tm_mon,&t.tm_mday,&t.tm_hour,&t.tm_min,&t.tm_sec) != 6)
 		throw XmlRpcException("Bad time value");
 
-	t.tm_isdst = -1;
+	t.tm_wday = t.tm_yday = t.tm_isdst = -1;
 	t.tm_mon -= 1;
 	_type = TypeDateTime;
 	u.asTime = new struct tm(t);
@@ -1118,6 +1118,7 @@ void XmlRpcValue::structFromXml(const char* &s)
 		XmlRpcValue val;
 		val.fromXml(s);
 		if ( ! val.valid()) {
+			free(name);
 			invalidate();
 			return;
 		}
@@ -1415,8 +1416,6 @@ void XmlRpcImplementation::hadError(const char* function)
 		errmsg += "Talking HTTPS to an HTTP server?";
 	else if (LastError == ERROR_INTERNET_CANNOT_CONNECT)
 		errmsg += "Failed to connect";
-	else if (LastError == ERROR_INTERNET_NAME_NOT_RESOLVED)
-		errmsg += "Name not resolved";
 	else if (LastError == ERROR_INTERNET_INVALID_URL)
 		errmsg += "Invalid URL";
 	else if (LastError == ERROR_INTERNET_NAME_NOT_RESOLVED)
@@ -1624,6 +1623,7 @@ RETRY:
 			sprintf(buf, "Low level (HTTP) error: %d %s", HttpErrcode, status_text);
 			errmsg = buf;
 		}
+		free(status_text);
 	    InternetCloseHandle(hHttpFile);
  		free(buf);
  		return false;
