@@ -57,11 +57,6 @@ static const char NAME_ETAG[]		 = "</name>";
 static const char MEMBER_ETAG[]	 = "</member>";
 static const char STRUCT_ETAG[]	 = "</struct>";
 
-std::string XmlRpcValue::_doubleFormat;
-
-
-
-
 
 //---------------------------------- Misc: -------------------------------
 

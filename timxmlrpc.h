@@ -254,13 +254,6 @@ public:
 	//! Encode the Value in xml
 	void toXml(std::ostringstream &ostr) const;
 
-	// Formatting
-	//! Return the format used to write double values.
-	static std::string const& getDoubleFormat() { return _doubleFormat; }
-
-	//! Specify the format used to write double values.
-	static void setDoubleFormat(const char* f) { _doubleFormat = f; }
-
 	bool parseMethodResponse(const char* s);
 	void buildCall(const char* method, std::ostringstream &ostr) const;
 
@@ -294,9 +287,6 @@ protected:
 	void arrayToXml(std::ostringstream &ostr) const;
 	void structToXml(std::ostringstream &ostr) const;
 	void nilToXml(std::ostringstream &ostr) const;
-
-	// Format strings
-	static std::string _doubleFormat;
 
 	// Type tag and values
 	Type _type;
