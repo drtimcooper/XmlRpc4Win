@@ -91,16 +91,6 @@ static bool strbegins(const char* bigstr, const char* smallstr, bool casesensiti
 }
 
 
-static void assert_failed(int line, char* filename, char* msg)
-{
-	printf("Assert failed|   %s:%d   %s\n", filename, line, msg);
-}
-
-#define assert(c)		if (c) ; else assert_failed(__LINE__,__FILE__,#c)
-
-
-
-
 //---------------------------------- ValueArray: -------------------------------
 
 void XmlRpcValue::ValueArray::resize(int n)
@@ -286,7 +276,7 @@ public:
 
 
 	template<class _II, class _OI, class _State, class _Endline>
-		_II put(_II _First, _II _Last, _OI _To, _State& _St, _Endline _Endl)	const
+		_II put(_II _First, _II _Last, _OI _To, _State&, _Endline)	const
 	{
 		three2four _3to4;
 		int line_octets = 0;
@@ -1244,8 +1234,8 @@ public:
 	XmlRpcImplementation(const char* server, INTERNET_PORT port, const char* object, XmlRpcClient::protocol_enum protocol);
 	XmlRpcImplementation(const char* URI);
 	bool execute(const char* method, XmlRpcValue const& params, XmlRpcValue& result);
-	void setCallback(XmlRpcCallback Callback, void* context)
-			{ this->Callback = Callback; this->context = context; }
+	void setCallback(XmlRpcCallback Callback_, void* context_)
+			{ Callback = Callback_; context = context_; }
 	void setIgnoreCertificateAuthority(bool value) { ignoreCertificateAuthority = value; }
 	~XmlRpcImplementation();
 };
@@ -1452,11 +1442,11 @@ void XmlRpcImplementation::hadError(const char* function)
 }
 
 
-static void CALLBACK myInternetCallback(HINTERNET hInternet,
+static void CALLBACK myInternetCallback(HINTERNET,
 				DWORD_PTR dwContext,
 				DWORD dwInternetStatus,
-				LPVOID lpvStatusInformation,
-				DWORD dwStatusInformationLength)
+				LPVOID,
+				DWORD)
 {
 	XmlRpcImplementation *connection = (XmlRpcImplementation*)dwContext;
 	if (connection && connection->Callback) {
@@ -1617,9 +1607,9 @@ RETRY:
  		if (!HttpQueryInfo(hHttpFile, HTTP_QUERY_STATUS_TEXT, status_text, &buf_size, 0))
  			errmsg = "Could not query HTTP result status";
 		else {
-			char buf[512];
-			sprintf_s(buf, "Low level (HTTP) error: %d %s", HttpErrcode, status_text);
-			errmsg = buf;
+			std::ostringstream sstream;
+			sstream << "Low level (HTTP) error: " << HttpErrcode << " " << status_text;
+			errmsg = sstream.str();
 		}
 		free(status_text);
 	    InternetCloseHandle(hHttpFile);
@@ -1672,6 +1662,13 @@ XmlRpcImplementation::~XmlRpcImplementation()
 #ifdef XML_RPC_UNIT_TEST
 
 #include <fstream>
+
+static void assert_failed(int line, char* filename, char* msg)
+{
+	printf("Assert failed|   %s:%d   %s\n", filename, line, msg);
+}
+
+#define assert(c)		if (c) ; else assert_failed(__LINE__,__FILE__,#c)
 
 static void RoundTrip(XmlRpcValue &a)
 {

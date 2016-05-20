@@ -323,7 +323,7 @@ public:
 	enum protocol_enum { XMLRPC_AUTO=0, XMLRPC_HTTP=1, XMLRPC_HTTPS=2 };
 
 	//! Construct a client and attempt to connect to the server at the specified host:port address
-	//!	@param host The name of the remote machine hosting the server
+	//!	@param server The name of the remote machine hosting the server
 	//!	@param port The port on the remote machine where the server is listening
 	//!	@param object	An optional object name to be sent in the HTTP GET header
 	XmlRpcClient(const char* server, int port, const char* object, protocol_enum protocol=XMLRPC_AUTO);
