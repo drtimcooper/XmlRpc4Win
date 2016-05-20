@@ -114,6 +114,8 @@ public:
 		int _size;
 		int _allocated;
 
+		ValueArray& operator=(const ValueArray &other);
+
 	public:
 		ValueArray() { A = NULL; _size = _allocated = 0; }
 		ValueArray(int n) { 
