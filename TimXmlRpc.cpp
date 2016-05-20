@@ -21,7 +21,6 @@ work with the token:  "/*ChrisMorley/".  Thanks, Chris!
 
 #include <windows.h>
 #include <wininet.h>
-#include <fstream>
 #include <iterator>
 #include "TimXmlRpc.h"
 
@@ -1670,6 +1669,10 @@ XmlRpcImplementation::~XmlRpcImplementation()
 
 //---------------------------- Unit testing: ----------------------
 
+#ifdef XML_RPC_UNIT_TEST
+
+#include <fstream>
+
 static void RoundTrip(XmlRpcValue &a)
 {
 	std::ostringstream ostr;
@@ -1746,3 +1749,4 @@ void XmlRpcUnitTest()
 	assert(a == b);
 }
 
+#endif
