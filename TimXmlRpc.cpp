@@ -1084,9 +1084,10 @@ void XmlRpcValue::structFromXml(const char* &s)
 	_type = TypeStruct;
 	u.asStruct = new ValueStruct;
 
+	size_t memberTagLen = strlen(MEMBER_TAG);
 	SkipWhiteSpace(s);
 	while (strbegins(s, MEMBER_TAG, true)) {
-		s += strlen(MEMBER_TAG);
+		s += memberTagLen;
 
 		// name
 		GobbleExpectedTag(s, NAME_TAG);
@@ -1457,7 +1458,7 @@ static void CALLBACK myInternetCallback(HINTERNET,
 			case INTERNET_STATUS_REQUEST_SENT:			status = "Data sent"; break;
 			case INTERNET_STATUS_SENDING_REQUEST:		status = "Sending data"; break;
 			default:									status = buf; 
-														sprintf_s(buf, "Status %d", dwInternetStatus);
+														sprintf_s(buf, "Status %u", dwInternetStatus);
 														break;
 		}
 		connection->Callback(connection->context, status);
@@ -1467,7 +1468,7 @@ static void CALLBACK myInternetCallback(HINTERNET,
 
 bool XmlRpcImplementation::execute(const char* method, XmlRpcValue const& params, XmlRpcValue& result)
 {
-	errmsg = "";
+	errmsg.clear();
 
 	if (hConnect == NULL) {
 		errmsg = "No connection";
@@ -1520,11 +1521,12 @@ RETRY:
 
 	// Add the 'Content-Type' && 'Content-length' headers
 	char header[255];		// Thanks, Anthony Chan.
-	sprintf_s(header, "Content-Type: text/xml\r\nContent-length: %Iu", ostr.str().size());
+	const std::string& requestStr = ostr.str();
+	sprintf_s(header, "Content-Type: text/xml\r\nContent-length: %Iu", requestStr.size());
 	HttpAddRequestHeadersA(hHttpFile, header, (DWORD)strlen(header), HTTP_ADDREQ_FLAG_ADD);
 
 	// Send the request:
-	if (! HttpSendRequestA(hHttpFile, NULL, 0, (LPVOID)ostr.str().c_str(), (DWORD)ostr.str().size())) {
+	if (! HttpSendRequestA(hHttpFile, NULL, 0, (LPVOID)requestStr.c_str(), (DWORD)requestStr.size())) {
 		hadError("HttpSendRequest");
 		return false;
 	}
@@ -1583,9 +1585,9 @@ RETRY:
 			buf = NULL;
 			if (BasicAuth.FindUsernameAndPassword(BasicAuth.username[0] != '\0', BasicAuth.username, BasicAuth.password)) {
 				InternetSetOptionA(hConnect, INTERNET_OPTION_PROXY_USERNAME, 
-										(LPVOID)BasicAuth.username, lstrlenA(BasicAuth.username));
+										(LPVOID)BasicAuth.username, DWORD(strlen(BasicAuth.username)));
 				InternetSetOptionA(hConnect, INTERNET_OPTION_PROXY_PASSWORD, 
-										(LPVOID)BasicAuth.password, lstrlenA(BasicAuth.password));
+										(LPVOID)BasicAuth.password, DWORD(strlen(BasicAuth.password)));
 				goto RETRY;
 			}
 		}
@@ -1638,7 +1640,7 @@ RETRY:
 	free(buf);
 
 	// Finished:
-	return errmsg == "";
+	return errmsg.empty();
 }
 
 
