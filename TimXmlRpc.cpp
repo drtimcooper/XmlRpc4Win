@@ -21,7 +21,9 @@ work with the token:  "/*ChrisMorley/".  Thanks, Chris!
 
 #include <windows.h>
 #include <wininet.h>
+#include <cmath>
 #include <iterator>
+#include <limits>
 #include "TimXmlRpc.h"
 
 
@@ -689,7 +691,7 @@ bool XmlRpcValue::operator==(XmlRpcValue const& other) const
 		case TypeBoolean:	return ( !u.asBool && !other.u.asBool) ||
 											( u.asBool && other.u.asBool);
 		case TypeInt:		return u.asInt == other.u.asInt;
-		case TypeDouble:	return u.asDouble == other.u.asDouble;
+		case TypeDouble:	return std::abs(u.asDouble - other.u.asDouble) < std::numeric_limits<double>::epsilon();
 		case TypeDateTime:	return tmEq(*u.asTime, *other.u.asTime);
 		case TypeString:	return *u.asString == *other.u.asString;
 		case TypeBase64:	return *u.asBinary == *other.u.asBinary;
