@@ -21,8 +21,9 @@ work with the token:  "/*ChrisMorley/".  Thanks, Chris!
 
 #include <windows.h>
 #include <wininet.h>
-#include <fstream>
+#include <cmath>
 #include <iterator>
+#include <limits>
 #include "TimXmlRpc.h"
 
 
@@ -58,11 +59,6 @@ static const char NAME_ETAG[]		 = "</name>";
 static const char MEMBER_ETAG[]	 = "</member>";
 static const char STRUCT_ETAG[]	 = "</struct>";
 
-std::string XmlRpcValue::_doubleFormat;
-
-
-
-
 
 //---------------------------------- Misc: -------------------------------
 
@@ -90,16 +86,6 @@ static bool strbegins(const char* bigstr, const char* smallstr, bool casesensiti
     }
     return true;
 }
-
-
-static void assert_failed(int line, char* filename, char* msg)
-{
-	printf("Assert failed|   %s:%d   %s\n", filename, line, msg);
-}
-
-#define assert(c)		if (c) ; else assert_failed(__LINE__,__FILE__,#c)
-
-
 
 
 //---------------------------------- ValueArray: -------------------------------
@@ -287,7 +273,7 @@ public:
 
 
 	template<class _II, class _OI, class _State, class _Endline>
-		_II put(_II _First, _II _Last, _OI _To, _State& _St, _Endline _Endl)	const
+		_II put(_II _First, _II _Last, _OI _To, _State&, _Endline)	const
 	{
 		three2four _3to4;
 		int line_octets = 0;
@@ -705,7 +691,7 @@ bool XmlRpcValue::operator==(XmlRpcValue const& other) const
 		case TypeBoolean:	return ( !u.asBool && !other.u.asBool) ||
 											( u.asBool && other.u.asBool);
 		case TypeInt:		return u.asInt == other.u.asInt;
-		case TypeDouble:	return u.asDouble == other.u.asDouble;
+		case TypeDouble:	return std::abs(u.asDouble - other.u.asDouble) < std::numeric_limits<double>::epsilon();
 		case TypeDateTime:	return tmEq(*u.asTime, *other.u.asTime);
 		case TypeString:	return *u.asString == *other.u.asString;
 		case TypeBase64:	return *u.asBinary == *other.u.asBinary;
@@ -1100,9 +1086,10 @@ void XmlRpcValue::structFromXml(const char* &s)
 	_type = TypeStruct;
 	u.asStruct = new ValueStruct;
 
+	size_t memberTagLen = strlen(MEMBER_TAG);
 	SkipWhiteSpace(s);
 	while (strbegins(s, MEMBER_TAG, true)) {
-		s += strlen(MEMBER_TAG);
+		s += memberTagLen;
 
 		// name
 		GobbleExpectedTag(s, NAME_TAG);
@@ -1245,8 +1232,8 @@ public:
 	XmlRpcImplementation(const char* server, INTERNET_PORT port, const char* object, XmlRpcClient::protocol_enum protocol);
 	XmlRpcImplementation(const char* URI);
 	bool execute(const char* method, XmlRpcValue const& params, XmlRpcValue& result);
-	void setCallback(XmlRpcCallback Callback, void* context)
-			{ this->Callback = Callback; this->context = context; }
+	void setCallback(XmlRpcCallback Callback_, void* context_)
+			{ Callback = Callback_; context = context_; }
 	void setIgnoreCertificateAuthority(bool value) { ignoreCertificateAuthority = value; }
 	~XmlRpcImplementation();
 };
@@ -1453,11 +1440,11 @@ void XmlRpcImplementation::hadError(const char* function)
 }
 
 
-static void CALLBACK myInternetCallback(HINTERNET hInternet,
+static void CALLBACK myInternetCallback(HINTERNET,
 				DWORD_PTR dwContext,
 				DWORD dwInternetStatus,
-				LPVOID lpvStatusInformation,
-				DWORD dwStatusInformationLength)
+				LPVOID,
+				DWORD)
 {
 	XmlRpcImplementation *connection = (XmlRpcImplementation*)dwContext;
 	if (connection && connection->Callback) {
@@ -1473,7 +1460,7 @@ static void CALLBACK myInternetCallback(HINTERNET hInternet,
 			case INTERNET_STATUS_REQUEST_SENT:			status = "Data sent"; break;
 			case INTERNET_STATUS_SENDING_REQUEST:		status = "Sending data"; break;
 			default:									status = buf; 
-														sprintf_s(buf, "Status %d", dwInternetStatus);
+														sprintf_s(buf, "Status %u", dwInternetStatus);
 														break;
 		}
 		connection->Callback(connection->context, status);
@@ -1483,7 +1470,7 @@ static void CALLBACK myInternetCallback(HINTERNET hInternet,
 
 bool XmlRpcImplementation::execute(const char* method, XmlRpcValue const& params, XmlRpcValue& result)
 {
-	errmsg = "";
+	errmsg.clear();
 
 	if (hConnect == NULL) {
 		errmsg = "No connection";
@@ -1536,11 +1523,12 @@ RETRY:
 
 	// Add the 'Content-Type' && 'Content-length' headers
 	char header[255];		// Thanks, Anthony Chan.
-	sprintf_s(header, "Content-Type: text/xml\r\nContent-length: %Iu", ostr.str().size());
+	const std::string& requestStr = ostr.str();
+	sprintf_s(header, "Content-Type: text/xml\r\nContent-length: %Iu", requestStr.size());
 	HttpAddRequestHeadersA(hHttpFile, header, (DWORD)strlen(header), HTTP_ADDREQ_FLAG_ADD);
 
 	// Send the request:
-	if (! HttpSendRequestA(hHttpFile, NULL, 0, (LPVOID)ostr.str().c_str(), (DWORD)ostr.str().size())) {
+	if (! HttpSendRequestA(hHttpFile, NULL, 0, (LPVOID)requestStr.c_str(), (DWORD)requestStr.size())) {
 		hadError("HttpSendRequest");
 		return false;
 	}
@@ -1599,9 +1587,9 @@ RETRY:
 			buf = NULL;
 			if (BasicAuth.FindUsernameAndPassword(BasicAuth.username[0] != '\0', BasicAuth.username, BasicAuth.password)) {
 				InternetSetOptionA(hConnect, INTERNET_OPTION_PROXY_USERNAME, 
-										(LPVOID)BasicAuth.username, lstrlenA(BasicAuth.username));
+										(LPVOID)BasicAuth.username, DWORD(strlen(BasicAuth.username)));
 				InternetSetOptionA(hConnect, INTERNET_OPTION_PROXY_PASSWORD, 
-										(LPVOID)BasicAuth.password, lstrlenA(BasicAuth.password));
+										(LPVOID)BasicAuth.password, DWORD(strlen(BasicAuth.password)));
 				goto RETRY;
 			}
 		}
@@ -1618,9 +1606,9 @@ RETRY:
  		if (!HttpQueryInfo(hHttpFile, HTTP_QUERY_STATUS_TEXT, status_text, &buf_size, 0))
  			errmsg = "Could not query HTTP result status";
 		else {
-			char buf[512];
-			sprintf_s(buf, "Low level (HTTP) error: %d %s", HttpErrcode, status_text);
-			errmsg = buf;
+			std::ostringstream sstream;
+			sstream << "Low level (HTTP) error: " << HttpErrcode << " " << status_text;
+			errmsg = sstream.str();
 		}
 		free(status_text);
 	    InternetCloseHandle(hHttpFile);
@@ -1654,7 +1642,7 @@ RETRY:
 	free(buf);
 
 	// Finished:
-	return errmsg == "";
+	return errmsg.empty();
 }
 
 
@@ -1669,6 +1657,17 @@ XmlRpcImplementation::~XmlRpcImplementation()
 
 
 //---------------------------- Unit testing: ----------------------
+
+#ifdef XML_RPC_UNIT_TEST
+
+#include <fstream>
+
+static void assert_failed(int line, char* filename, char* msg)
+{
+	printf("Assert failed|   %s:%d   %s\n", filename, line, msg);
+}
+
+#define assert(c)		if (c) ; else assert_failed(__LINE__,__FILE__,#c)
 
 static void RoundTrip(XmlRpcValue &a)
 {
@@ -1746,3 +1745,4 @@ void XmlRpcUnitTest()
 	assert(a == b);
 }
 
+#endif

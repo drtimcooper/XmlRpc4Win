@@ -114,6 +114,8 @@ public:
 		int _size;
 		int _allocated;
 
+		ValueArray& operator=(const ValueArray &other);
+
 	public:
 		ValueArray() { A = NULL; _size = _allocated = 0; }
 		ValueArray(int n) { 
@@ -254,13 +256,6 @@ public:
 	//! Encode the Value in xml
 	void toXml(std::ostringstream &ostr) const;
 
-	// Formatting
-	//! Return the format used to write double values.
-	static std::string const& getDoubleFormat() { return _doubleFormat; }
-
-	//! Specify the format used to write double values.
-	static void setDoubleFormat(const char* f) { _doubleFormat = f; }
-
 	bool parseMethodResponse(const char* s);
 	void buildCall(const char* method, std::ostringstream &ostr) const;
 
@@ -295,9 +290,6 @@ protected:
 	void structToXml(std::ostringstream &ostr) const;
 	void nilToXml(std::ostringstream &ostr) const;
 
-	// Format strings
-	static std::string _doubleFormat;
-
 	// Type tag and values
 	Type _type;
 
@@ -323,7 +315,7 @@ public:
 	enum protocol_enum { XMLRPC_AUTO=0, XMLRPC_HTTP=1, XMLRPC_HTTPS=2 };
 
 	//! Construct a client and attempt to connect to the server at the specified host:port address
-	//!	@param host The name of the remote machine hosting the server
+	//!	@param server The name of the remote machine hosting the server
 	//!	@param port The port on the remote machine where the server is listening
 	//!	@param object	An optional object name to be sent in the HTTP GET header
 	XmlRpcClient(const char* server, int port, const char* object, protocol_enum protocol=XMLRPC_AUTO);
