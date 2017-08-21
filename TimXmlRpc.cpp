@@ -135,7 +135,7 @@ XmlRpcValue::ValueArray::~ValueArray()
 
 //---------------------------------- base64.h: -------------------------------
 	/* <Chris Morley> */
-static
+static const
 int _base64Chars[]= {'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
 						 'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',
 							 '0','1','2','3','4','5','6','7','8','9',
@@ -1449,7 +1449,7 @@ static void CALLBACK myInternetCallback(HINTERNET,
 	XmlRpcImplementation *connection = (XmlRpcImplementation*)dwContext;
 	if (connection && connection->Callback) {
 		static char buf[512];
-		char* status;
+		const char* status;
 		switch (dwInternetStatus) {
 			case INTERNET_STATUS_RECEIVING_RESPONSE:	if (connection->totalBytes == 0)
 															status = "Waiting for response"; 
