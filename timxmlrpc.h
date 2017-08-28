@@ -53,7 +53,7 @@ See 'SampleMain.cpp' for a more elaborate example.
 
 
 
-typedef void (*XmlRpcCallback)(void* context, char* status);
+typedef void (*XmlRpcCallback)(void* context, const char* status);
 
 
 /* A 'get username and password' function is used for HTTP basic authentication.
